@@ -13,7 +13,6 @@ export class Comuna {
     @Column()
     regionId:number
 
-
     @ManyToOne(() => Region, (region) => region.comunas)
     @JoinColumn({ name: 'regionId' })
     region: Region;
