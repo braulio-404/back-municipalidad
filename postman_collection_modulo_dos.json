@@ -1,0 +1,419 @@
+{
+	"info": {
+		"name": "Municipalidad - Módulo Dos (Ofertas y Postulantes)",
+		"description": "Colección completa para probar todos los endpoints del módulo-dos",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. OFERTA TRABAJO",
+			"item": [
+				{
+					"name": "Crear Oferta de Trabajo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tituloOferta\": \"Desarrollador Full Stack\",\n  \"descripcion\": \"Buscamos desarrollador con experiencia en Node.js y React\",\n  \"ubicacion\": \"Santiago, Chile\",\n  \"modalidad\": \"híbrido\",\n  \"tipoContrato\": \"full-time\",\n  \"salarioMinimo\": 800000,\n  \"salarioMaximo\": 1200000,\n  \"requisitos\": \"Experiencia en JavaScript, Node.js, React. Conocimientos en bases de datos\",\n  \"beneficios\": \"Seguro médico, vacaciones adicionales, capacitaciones\",\n  \"experienciaRequerida\": \"semi-senior\",\n  \"nivelEducacion\": \"universitario\",\n  \"fechaPublicacion\": \"2025-01-08\",\n  \"fechaCierre\": \"2025-02-08\",\n  \"estado\": \"activa\",\n  \"contactoRRHH\": \"María González\",\n  \"emailContacto\": \"rrhh@municipalidad.cl\",\n  \"telefonoContacto\": \"+56912345678\",\n  \"numeroVacantes\": 2,\n  \"jornada\": \"completa\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/oferta-trabajo",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-trabajo"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Todas las Ofertas",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-trabajo",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-trabajo"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Oferta por ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-trabajo/{{ofertaId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-trabajo", "{{ofertaId}}"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Ofertas por Estado",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-trabajo/estado/activa",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-trabajo", "estado", "activa"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Oferta",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"estado\": \"pausada\",\n  \"salarioMaximo\": 1300000\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/oferta-trabajo/{{ofertaId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-trabajo", "{{ofertaId}}"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Oferta",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-trabajo/{{ofertaId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-trabajo", "{{ofertaId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. POSTULANTE",
+			"item": [
+				{
+					"name": "Crear Postulante",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombres\": \"Juan Carlos\",\n  \"apellidoPaterno\": \"Pérez\",\n  \"apellidoMaterno\": \"González\",\n  \"rut\": \"12345678-9\",\n  \"email\": \"juan.perez@email.com\",\n  \"telefono\": \"+56987654321\",\n  \"fechaNacimiento\": \"1990-05-15\",\n  \"genero\": \"masculino\",\n  \"nacionalidad\": \"Chilena\",\n  \"region\": \"Metropolitana\",\n  \"comuna\": \"Santiago\",\n  \"direccion\": \"Av. Libertador 1234, Santiago\",\n  \"nivelEducacion\": \"universitario\",\n  \"profesion\": \"Ingeniero en Informática\",\n  \"experienciaLaboral\": \"3-5 años\",\n  \"habilidades\": \"JavaScript, Node.js, React, SQL, Git\",\n  \"idiomas\": \"Español (nativo), Inglés (intermedio)\",\n  \"pretensionSalarial\": 1000000,\n  \"disponibilidad\": \"inmediata\",\n  \"modalidadPreferida\": \"híbrido\",\n  \"jornadaPreferida\": \"completa\",\n  \"estado\": \"activo\",\n  \"sobreMi\": \"Desarrollador apasionado por la tecnología con experiencia en aplicaciones web\",\n  \"servicioMilitarCompleto\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/postulante",
+							"host": ["{{baseUrl}}"],
+							"path": ["postulante"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Todos los Postulantes",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/postulante",
+							"host": ["{{baseUrl}}"],
+							"path": ["postulante"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Postulante por ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/postulante/{{postulanteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["postulante", "{{postulanteId}}"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Postulante",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"telefono\": \"+56912345678\",\n  \"pretensionSalarial\": 1100000,\n  \"disponibilidad\": \"1 semana\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/postulante/{{postulanteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["postulante", "{{postulanteId}}"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Postulante",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/postulante/{{postulanteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["postulante", "{{postulanteId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. DOCUMENTO POSTULANTE",
+			"item": [
+				{
+					"name": "Crear Documento de Postulante",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"postulanteID\": \"{{postulanteId}}\",\n  \"nombreArchivo\": \"curriculum_vitae_juan_perez.pdf\",\n  \"tipoArchivo\": \"pdf\",\n  \"descripcion\": \"Curriculum Vitae actualizado\",\n  \"contenido\": \"Contenido del CV en base64 o texto...\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/documento-postulante",
+							"host": ["{{baseUrl}}"],
+							"path": ["documento-postulante"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Todos los Documentos",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/documento-postulante",
+							"host": ["{{baseUrl}}"],
+							"path": ["documento-postulante"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Documentos por Postulante",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/documento-postulante/postulante/{{postulanteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["documento-postulante", "postulante", "{{postulanteId}}"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Documento por ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/documento-postulante/{{documentoId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["documento-postulante", "{{documentoId}}"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Documento",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"descripcion\": \"CV actualizado con nuevas experiencias\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/documento-postulante/{{documentoId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["documento-postulante", "{{documentoId}}"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Documento",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/documento-postulante/{{documentoId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["documento-postulante", "{{documentoId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. OFERTA POSTULANTE (Llave Compuesta)",
+			"item": [
+				{
+					"name": "Crear Postulación",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ofertaTrabajoID\": \"{{ofertaId}}\",\n  \"postulanteID\": \"{{postulanteId}}\",\n  \"fechaPostulacion\": \"2025-01-08\",\n  \"estado\": \"pendiente\",\n  \"cartaPresentacion\": \"Estimados, me dirijo a ustedes para postular al cargo de Desarrollador Full Stack. Cuento con experiencia en las tecnologías requeridas...\",\n  \"pretensionSalarial\": 1000000,\n  \"disponibilidadInicio\": \"inmediata\",\n  \"comentarios\": \"Muy interesado en la posición\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/oferta-postulante",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-postulante"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Todas las Postulaciones",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-postulante",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-postulante"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Postulaciones por Oferta",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-postulante/oferta/{{ofertaId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-postulante", "oferta", "{{ofertaId}}"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Postulaciones por Postulante",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-postulante/postulante/{{postulanteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-postulante", "postulante", "{{postulanteId}}"]
+						}
+					}
+				},
+				{
+					"name": "Obtener Postulación Específica (Llave Compuesta)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-postulante/{{ofertaId}}/{{postulanteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-postulante", "{{ofertaId}}", "{{postulanteId}}"]
+						}
+					}
+				},
+				{
+					"name": "Actualizar Postulación (Proceso RRHH)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"estado\": \"en_revision\",\n  \"observacionesRRHH\": \"Candidato interesante, revisar experiencia en React\",\n  \"fechaEntrevista\": \"2025-01-15\",\n  \"tipoEntrevista\": \"online\",\n  \"puntuacion\": 8\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/oferta-postulante/{{ofertaId}}/{{postulanteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-postulante", "{{ofertaId}}", "{{postulanteId}}"]
+						}
+					}
+				},
+				{
+					"name": "Eliminar Postulación",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-postulante/{{ofertaId}}/{{postulanteId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-postulante", "{{ofertaId}}", "{{postulanteId}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. TESTS DE FLUJO COMPLETO",
+			"item": [
+				{
+					"name": "Test: Crear Oferta → Postulante → Postulación",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/oferta-trabajo",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-trabajo"]
+						},
+						"description": "1. Crear oferta\n2. Crear postulante\n3. Crear postulación\n4. Verificar relaciones"
+					}
+				},
+				{
+					"name": "Test: Buscar Duplicados (Should Fail)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ofertaTrabajoID\": \"{{ofertaId}}\",\n  \"postulanteID\": \"{{postulanteId}}\",\n  \"fechaPostulacion\": \"2025-01-08\",\n  \"estado\": \"pendiente\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/oferta-postulante",
+							"host": ["{{baseUrl}}"],
+							"path": ["oferta-postulante"]
+						},
+						"description": "Debe retornar error 409 CONFLICT"
+					}
+				}
+			]
+		}
+	]
+} 
