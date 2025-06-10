@@ -1,0 +1,49 @@
+# Dependencias
+node_modules
+npm-debug.log*
+
+# Archivos de desarrollo
+.git
+.gitignore
+README.md
+*.md
+
+# Archivos de testing
+test
+coverage
+*.test.js
+*.spec.js
+
+# Archivos de desarrollo
+.env
+.env.local
+.env.development
+.env.test
+
+# Logs
+logs
+*.log
+
+# Archivos temporales
+.tmp
+.temp
+
+# Archivos del IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de build locales
+dist
+
+# Archivos de Railway
+railway.json
+
+# Archivos de Docker
+Dockerfile
+.dockerignore 
