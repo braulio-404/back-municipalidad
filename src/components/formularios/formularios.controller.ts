@@ -47,30 +47,33 @@ export class FormulariosController {
     try {
       const resultado = await this.formulariosService.descargarDocumentos(descargarDocumentosDto);
       
-      // Determinar si es un archivo individual o múltiple
-      const esArchivoMultiple = resultado.esMultiple;
-      const buffer = resultado.buffer;
+      // Generar nombre del archivo principal con fecha
+      const fechaActual = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const nombreArchivo = `Postulaciones${fechaActual}.zip`;
       
-      if (esArchivoMultiple) {
-        res.set({
-          'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename="documentos-formulario-${descargarDocumentosDto.ids[0]}.zip"`,
-          'Content-Length': buffer.length,
+      // Siempre será un archivo ZIP con la nueva estructura
+      res.set({
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${nombreArchivo}"`,
+        'Content-Length': resultado.buffer.length,
+      });
+      
+      res.status(HttpStatus.OK).send(resultado.buffer);
+    } catch (error) {
+      console.error('Error en endpoint descargar:', error);
+      
+      // Manejar diferentes tipos de errores
+      if (error.name === 'NotFoundException') {
+        res.status(HttpStatus.NOT_FOUND).json({
+          message: error.message,
+          error: 'No se encontraron documentos'
         });
       } else {
-        res.set({
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': 'attachment; filename="documento-formulario.pdf"',
-          'Content-Length': buffer.length,
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: 'Error al generar el archivo de descarga',
+          error: error.message
         });
       }
-      
-      res.status(HttpStatus.OK).send(buffer);
-    } catch (error) {
-      res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-        message: 'Error al generar el archivo de descarga',
-        error: error.message
-      });
     }
   }
 } 

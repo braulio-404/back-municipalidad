@@ -133,50 +133,15 @@ export class FormulariosService {
 
   async descargarDocumentos(descargarDocumentosDto: DescargarDocumentosDto): Promise<{ buffer: Buffer; esMultiple: boolean }> {
     try {
-      const formularioId = descargarDocumentosDto.ids[0]; // Tomamos el primer ID del array
-      console.log(`Descargando documentos para formulario ID: ${formularioId}`);
+      const formularioIds = descargarDocumentosDto.ids;
+      console.log(`Descargando documentos para formularios IDs: ${formularioIds.join(', ')}`);
       
-      // 1. Buscar todos los postulantes que tengan ese formulario_id
-      const postulantes = await this.postulanteRepository.find({
-        where: { formulario_id: formularioId },
-        relations: ['documentos', 'formulario']
-      });
-
-      console.log(`Se encontraron ${postulantes.length} postulantes para el formulario ${formularioId}`);
-
-      if (postulantes.length === 0) {
-        throw new NotFoundException(`No se encontraron postulantes para el formulario con ID ${formularioId}`);
-      }
-
-      // 2. Recopilar todos los documentos de todos los postulantes
-      const todosLosDocumentos: DocumentoPostulante[] = [];
-      postulantes.forEach(postulante => {
-        console.log(`Postulante ${postulante.nombres} ${postulante.apellidoPaterno} tiene ${postulante.documentos.length} documentos`);
-        todosLosDocumentos.push(...postulante.documentos);
-      });
-
-      console.log(`Total de documentos encontrados: ${todosLosDocumentos.length}`);
-
-      if (todosLosDocumentos.length === 0) {
-        throw new NotFoundException(`No se encontraron documentos para los postulantes del formulario ${formularioId}`);
-      }
-
-      // 3. Si hay un solo documento, retornarlo como archivo individual
-      if (todosLosDocumentos.length === 1) {
-        const documento = todosLosDocumentos[0];
-        console.log(`Descargando documento individual: ${documento.nombreArchivo}`);
-        
-        if (!documento.contenido) {
-          throw new NotFoundException('El documento no tiene contenido disponible');
-        }
-        
-        const buffer = Buffer.from(documento.contenido, 'base64');
-        return { buffer, esMultiple: false };
-      }
-
-      // 4. Si hay múltiples documentos, crear un archivo ZIP
-      console.log('Creando archivo ZIP con múltiples documentos');
-      const buffer = await this.crearArchivoRAR(todosLosDocumentos, formularioId);
+      // Obtener fecha actual para el nombre del archivo principal
+      const fechaActual = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      const nombreArchivoPrincipal = `Postulaciones${fechaActual}`;
+      
+      // Crear el ZIP principal
+      const buffer = await this.crearZipEstructurado(formularioIds, nombreArchivoPrincipal);
       return { buffer, esMultiple: true };
 
     } catch (error) {
@@ -185,24 +150,164 @@ export class FormulariosService {
     }
   }
 
-  private async crearArchivoRAR(documentos: DocumentoPostulante[], formularioId: number): Promise<Buffer> {
+  private async crearZipEstructurado(formularioIds: number[], nombreArchivoPrincipal: string): Promise<Buffer> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const archivePrincipal = archiver('zip', { zlib: { level: 9 } });
+        const chunks: Buffer[] = [];
+
+        archivePrincipal.on('data', (chunk) => chunks.push(chunk));
+        archivePrincipal.on('end', () => {
+          console.log(`ZIP principal creado exitosamente: ${nombreArchivoPrincipal}.zip`);
+          resolve(Buffer.concat(chunks));
+        });
+        archivePrincipal.on('error', (err) => {
+          console.error('Error al crear ZIP principal:', err);
+          reject(err);
+        });
+
+        let totalDocumentosEncontrados = 0;
+        let formulariosConPostulantes = 0;
+
+        // Procesar cada formulario (postulación)
+        for (const formularioId of formularioIds) {
+          console.log(`\n=== Procesando formulario ID: ${formularioId} ===`);
+          
+          // 1. Buscar todos los postulantes de esta postulación
+          const postulantes = await this.postulanteRepository.find({
+            where: { formulario_id: formularioId },
+            relations: ['documentos', 'formulario']
+          });
+
+          if (postulantes.length === 0) {
+            console.warn(`No se encontraron postulantes para el formulario ${formularioId}`);
+            continue;
+          }
+
+          console.log(`Se encontraron ${postulantes.length} postulantes para el formulario ${formularioId}`);
+
+          // Contar documentos de este formulario
+          const documentosFormulario = postulantes.reduce((total, postulante) => total + postulante.documentos.length, 0);
+          totalDocumentosEncontrados += documentosFormulario;
+
+          console.log(`Documentos encontrados en formulario ${formularioId}: ${documentosFormulario}`);
+
+          if (documentosFormulario > 0) {
+            formulariosConPostulantes++;
+            
+            // 2. Crear ZIP para esta postulación
+            const nombreFormulario = postulantes[0].formulario?.cargo || `Postulacion_${formularioId}`;
+            const zipPostulacion = await this.crearZipPorPostulacion(postulantes, nombreFormulario);
+            
+            // 3. Agregar el ZIP de la postulación al ZIP principal
+            archivePrincipal.append(zipPostulacion, { name: `${nombreFormulario}.zip` });
+            console.log(`ZIP de postulación agregado: ${nombreFormulario}.zip`);
+          } else {
+            console.warn(`No se encontraron documentos para los postulantes del formulario ${formularioId}`);
+          }
+        }
+
+        console.log(`\n=== RESUMEN FINAL ===`);
+        console.log(`Total de documentos encontrados: ${totalDocumentosEncontrados}`);
+        console.log(`Formularios con documentos: ${formulariosConPostulantes}`);
+
+        // Verificar si se encontraron documentos en total
+        if (totalDocumentosEncontrados === 0) {
+          reject(new NotFoundException('No se encontraron documentos para ningún postulante en las postulaciones solicitadas'));
+          return;
+        }
+
+        archivePrincipal.finalize();
+        
+      } catch (error) {
+        console.error('Error en crearZipEstructurado:', error);
+        reject(error);
+      }
+    });
+  }
+
+  private async crearZipPorPostulacion(postulantes: Postulante[], nombrePostulacion: string): Promise<Buffer> {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const archive = archiver('zip', { zlib: { level: 9 } });
+        const chunks: Buffer[] = [];
+
+        archive.on('data', (chunk) => chunks.push(chunk));
+        archive.on('end', () => {
+          console.log(`ZIP de postulación "${nombrePostulacion}" creado exitosamente`);
+          resolve(Buffer.concat(chunks));
+        });
+        archive.on('error', (err) => {
+          console.error(`Error al crear ZIP de postulación "${nombrePostulacion}":`, err);
+          reject(err);
+        });
+
+        // Agrupar postulantes por RUT para crear un ZIP por cada postulante
+        const postulantesPorRut = new Map<string, Postulante[]>();
+        postulantes.forEach(postulante => {
+          const rut = postulante.rut;
+          if (!postulantesPorRut.has(rut)) {
+            postulantesPorRut.set(rut, []);
+          }
+          postulantesPorRut.get(rut)!.push(postulante);
+        });
+
+        console.log(`Postulantes únicos por RUT: ${postulantesPorRut.size}`);
+
+        // Crear un ZIP por cada postulante (agrupado por RUT) usando for...of para manejar async correctamente
+        for (const [rut, postulantesDelRut] of postulantesPorRut) {
+          try {
+            // Tomar el primer postulante para obtener el nombre
+            const postulante = postulantesDelRut[0];
+            const nombrePostulante = `${postulante.nombres}_${postulante.apellidoPaterno}_${rut}`;
+            
+            // Recopilar todos los documentos de este RUT
+            const documentosDelPostulante: DocumentoPostulante[] = [];
+            postulantesDelRut.forEach(p => {
+              documentosDelPostulante.push(...p.documentos);
+            });
+
+            console.log(`Postulante ${nombrePostulante}: ${documentosDelPostulante.length} documentos`);
+
+            if (documentosDelPostulante.length > 0) {
+              const zipPostulante = await this.crearZipPorPostulante(documentosDelPostulante, nombrePostulante);
+              archive.append(zipPostulante, { name: `${nombrePostulante}.zip` });
+              console.log(`ZIP de postulante agregado: ${nombrePostulante}.zip`);
+            }
+            
+          } catch (error) {
+            console.error(`Error al procesar postulante con RUT ${rut}:`, error);
+          }
+        }
+
+        // Finalizar el archivo después de procesar todos los postulantes
+        archive.finalize();
+        
+      } catch (error) {
+        console.error('Error en crearZipPorPostulacion:', error);
+        reject(error);
+      }
+    });
+  }
+
+  private async crearZipPorPostulante(documentos: DocumentoPostulante[], nombrePostulante: string): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       const archive = archiver('zip', { zlib: { level: 9 } });
       const chunks: Buffer[] = [];
 
       archive.on('data', (chunk) => chunks.push(chunk));
       archive.on('end', () => {
-        console.log(`Archivo ZIP creado exitosamente con ${documentos.length} documentos`);
+        console.log(`ZIP del postulante "${nombrePostulante}" creado con ${documentos.length} documentos`);
         resolve(Buffer.concat(chunks));
       });
       archive.on('error', (err) => {
-        console.error('Error al crear archivo ZIP:', err);
+        console.error(`Error al crear ZIP del postulante "${nombrePostulante}":`, err);
         reject(err);
       });
 
       let documentosAgregados = 0;
 
-      // Agregar cada documento al archivo
+      // Agregar cada documento PDF al ZIP del postulante
       documentos.forEach((documento, index) => {
         if (documento.contenido) {
           try {
@@ -211,19 +316,17 @@ export class FormulariosService {
             // Generar nombre único para evitar conflictos
             let nombreArchivo;
             if (documento.nombreArchivo) {
-              // Si tiene nombre original, mantenerlo pero agregar prefijo por si hay duplicados
-              nombreArchivo = `${index + 1}_${documento.nombreArchivo}`;
+              nombreArchivo = documento.nombreArchivo;
             } else {
-              // Si no tiene nombre, generar uno
-              nombreArchivo = `documento_${index + 1}.${documento.tipoArchivo || 'bin'}`;
+              const extension = documento.tipoArchivo === 'application/pdf' ? 'pdf' : 'bin';
+              nombreArchivo = `documento_${index + 1}.${extension}`;
             }
 
-            console.log(`Agregando al ZIP: ${nombreArchivo} (${buffer.length} bytes)`);
+            console.log(`Agregando documento: ${nombreArchivo} (${buffer.length} bytes)`);
             archive.append(buffer, { name: nombreArchivo });
             documentosAgregados++;
           } catch (error) {
             console.error(`Error al procesar documento ${documento.documentoPostulanteID}:`, error);
-            // Continuar con los demás documentos
           }
         } else {
           console.warn(`El documento ${documento.documentoPostulanteID} no tiene contenido`);
@@ -231,11 +334,10 @@ export class FormulariosService {
       });
 
       if (documentosAgregados === 0) {
-        reject(new Error('No se pudo agregar ningún documento al archivo ZIP'));
-        return;
+        console.warn(`No se agregaron documentos para el postulante ${nombrePostulante}`);
       }
 
-      console.log(`Se agregaron ${documentosAgregados} de ${documentos.length} documentos al ZIP`);
+      console.log(`Se agregaron ${documentosAgregados} de ${documentos.length} documentos al ZIP del postulante`);
       archive.finalize();
     });
   }

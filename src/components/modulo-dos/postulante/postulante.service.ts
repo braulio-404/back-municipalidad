@@ -18,28 +18,18 @@ export class PostulanteService {
     try {
       this.logger.log('Creando nuevo postulante');
       
-      // Verificar si ya existe el RUT
-      const existeRUT = await this.postulanteRepository.findOne({
-        where: { rut: createPostulanteDto.rut }
+      // Verificar si ya existe una postulación con el mismo RUT y formulario_id
+      const existePostulacion = await this.postulanteRepository.findOne({
+        where: { 
+          rut: createPostulanteDto.rut,
+          formulario_id: createPostulanteDto.formulario_id
+        }
       });
 
-      if (existeRUT) {
-        this.logger.warn(`RUT ya existe: ${createPostulanteDto.rut}`);
+      if (existePostulacion) {
+        this.logger.warn(`Ya existe una postulación para el RUT ${createPostulanteDto.rut} en el formulario ${createPostulanteDto.formulario_id}`);
         throw new HttpException(
-          'El RUT ya está registrado',
-          HttpStatus.CONFLICT
-        );
-      }
-
-      // Verificar si ya existe el email
-      const existeEmail = await this.postulanteRepository.findOne({
-        where: { email: createPostulanteDto.email }
-      });
-
-      if (existeEmail) {
-        this.logger.warn(`Email ya existe: ${createPostulanteDto.email}`);
-        throw new HttpException(
-          'El email ya está registrado',
+          'Ya estás postulando a este cargo',
           HttpStatus.CONFLICT
         );
       }
@@ -151,35 +141,26 @@ export class PostulanteService {
       // Separar documentos del DTO de actualización si existen
       const { documentos, ...postulanteData } = updatePostulanteDto;
 
-      // Si se actualiza RUT, verificar que no exista en otro postulante
+      // Si se actualiza RUT, verificar que no exista otro postulante con el mismo RUT y formulario_id
       if (postulanteData.rut && postulanteData.rut !== postulante.rut) {
-        const existeRUT = await this.postulanteRepository.findOne({
-          where: { rut: postulanteData.rut }
+        const formulario_id = postulanteData.formulario_id || postulante.formulario_id;
+        const existePostulacion = await this.postulanteRepository.findOne({
+          where: { 
+            rut: postulanteData.rut,
+            formulario_id: formulario_id
+          }
         });
 
-        if (existeRUT) {
-          this.logger.warn(`RUT ya existe: ${postulanteData.rut}`);
+        if (existePostulacion) {
+          this.logger.warn(`Ya existe una postulación para el RUT ${postulanteData.rut} en el formulario ${formulario_id}`);
           throw new HttpException(
-            'El RUT ya está registrado',
+            'Ya estás postulando a este cargo',
             HttpStatus.CONFLICT
           );
         }
       }
 
-      // Si se actualiza email, verificar que no exista en otro postulante
-      if (postulanteData.email && postulanteData.email !== postulante.email) {
-        const existeEmail = await this.postulanteRepository.findOne({
-          where: { email: postulanteData.email }
-        });
-
-        if (existeEmail) {
-          this.logger.warn(`Email ya existe: ${postulanteData.email}`);
-          throw new HttpException(
-            'El email ya está registrado',
-            HttpStatus.CONFLICT
-          );
-        }
-      }
+      // Nota: Permitimos que el mismo email se use en diferentes formularios
 
       await this.postulanteRepository.update(id, postulanteData);
       const postulanteActualizado = await this.postulanteRepository.findOne({
